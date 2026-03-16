@@ -131,7 +131,7 @@ html, body {
 
 /* ゲームフィールド内のオブジェクト */
 .game-obj {
-  position: absolute; font-size: 2rem; transition: none;
+  position: absolute; font-size: 2.8rem; transition: none;
   pointer-events: none; line-height: 1;
 }
 .game-obj.counted {
@@ -276,7 +276,7 @@ html, body {
   .method-card { width: 140px; padding: 18px 12px; }
   .method-emoji { font-size: 2rem; }
   .method-name { font-size: 1.1rem; }
-  .game-obj { font-size: 1.5rem; }
+  .game-obj { font-size: 2.2rem; }
   .answer-digit { width: 40px; height: 48px; font-size: 1.5rem; }
   .num-btn { font-size: 1.2rem; padding: 8px 0; }
   .stage-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }

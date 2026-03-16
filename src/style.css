@@ -1,0 +1,249 @@
+/* ========== リセット・基本 ========== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  background: #f0f4ff;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+#app { width: 100%; height: 100%; position: relative; }
+.screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ========== ボタン共通 ========== */
+.btn {
+  border: none; border-radius: 16px; cursor: pointer;
+  font-size: 1.2rem; font-weight: bold; padding: 12px 28px;
+  transition: transform 0.1s, box-shadow 0.1s;
+  font-family: inherit;
+}
+.btn:active { transform: scale(0.95); }
+.btn-small { font-size: 0.9rem; padding: 8px 16px; border-radius: 12px; background: #dde4f0; color: #445; }
+
+/* ========== タイトル画面 ========== */
+#screen-title {
+  align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #e8f0ff 0%, #fff5e8 100%);
+}
+.title-container { text-align: center; padding: 20px; max-width: 480px; width: 100%; }
+.game-title { font-size: 2.6rem; color: #ff7043; margin-bottom: 32px; text-shadow: 2px 2px 0 #ffe0b2; }
+.setting-group { margin-bottom: 24px; }
+.setting-label { font-size: 1.1rem; color: #666; margin-bottom: 10px; }
+.btn-group { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+.btn-easy { background: #a5d6a7; color: #2e7d32; }
+.btn-easy.selected { background: #4caf50; color: #fff; box-shadow: 0 4px 12px rgba(76,175,80,0.4); }
+.btn-normal { background: #90caf9; color: #1565c0; }
+.btn-normal.selected { background: #2196f3; color: #fff; box-shadow: 0 4px 12px rgba(33,150,243,0.4); }
+.btn-hard { background: #ef9a9a; color: #c62828; }
+.btn-hard.selected { background: #f44336; color: #fff; box-shadow: 0 4px 12px rgba(244,67,54,0.4); }
+.btn-select { background: #ce93d8; color: #6a1b9a; }
+.btn-select.selected { background: #9c27b0; color: #fff; box-shadow: 0 4px 12px rgba(156,39,176,0.4); }
+.btn-draw { background: #ffcc80; color: #e65100; }
+.btn-draw.selected { background: #ff9800; color: #fff; box-shadow: 0 4px 12px rgba(255,152,0,0.4); }
+
+.btn-start-game {
+  background: linear-gradient(135deg, #ff7043, #ff8a65);
+  color: #fff; font-size: 1.5rem; padding: 16px 48px;
+  border-radius: 24px; margin-top: 16px;
+  box-shadow: 0 6px 20px rgba(255,112,67,0.4);
+}
+
+/* ========== ステージ選択画面 ========== */
+#screen-stages {
+  background: linear-gradient(135deg, #e8f0ff 0%, #f3e5f5 100%);
+  padding: 16px;
+}
+.stage-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.stage-title { font-size: 1.5rem; color: #555; }
+.stage-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px; padding: 8px; overflow-y: auto; flex: 1;
+}
+.stage-card {
+  background: #fff; border-radius: 20px; padding: 24px 16px;
+  text-align: center; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.15s;
+  position: relative;
+}
+.stage-card:active { transform: scale(0.95); }
+.stage-card .stage-num { font-size: 2rem; font-weight: bold; color: #555; }
+.stage-card.cleared { border: 3px solid #4caf50; }
+.stage-card.cleared::after {
+  content: '⭐'; position: absolute; top: -8px; right: -8px; font-size: 1.8rem;
+}
+
+/* ========== ゲーム画面 ========== */
+#screen-game {
+  background: #fff;
+  flex-direction: column;
+}
+.game-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; background: #f5f5f5; border-bottom: 2px solid #e0e0e0;
+  flex-shrink: 0;
+}
+.game-question { font-size: 1.2rem; color: #333; flex: 1; text-align: center; }
+.game-stage-num { font-size: 0.9rem; color: #999; }
+
+.game-field {
+  flex: 1; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #a5d6a7 40%, #81c784 100%);
+  min-height: 200px;
+}
+
+/* ゲームフィールド内のオブジェクト */
+.game-obj {
+  position: absolute; font-size: 2rem; transition: none;
+  pointer-events: none; line-height: 1;
+}
+.game-obj.counted {
+  animation: pop 0.4s ease;
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ========== 回答エリア ========== */
+.answer-area {
+  padding: 12px 16px; background: #fafafa;
+  border-top: 2px solid #e0e0e0; flex-shrink: 0;
+}
+
+/* せんたく回答 */
+.select-answer {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.answer-display {
+  display: flex; gap: 6px; align-items: center; min-height: 56px;
+  justify-content: center;
+}
+.answer-digit {
+  width: 48px; height: 56px; background: #fff; border: 3px solid #90caf9;
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; font-weight: bold; color: #1565c0; cursor: pointer;
+  transition: transform 0.1s;
+}
+.answer-digit:active { transform: scale(0.9); }
+.answer-digit.filled { background: #e3f2fd; border-color: #2196f3; }
+.answer-digit.active { border-color: #ff9800; box-shadow: 0 0 8px rgba(255,152,0,0.5); }
+.number-pad {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; max-width: 400px;
+}
+.num-btn {
+  background: #fff; border: 2px solid #ccc; border-radius: 12px;
+  font-size: 1.5rem; font-weight: bold; padding: 10px 0; cursor: pointer;
+  color: #333; transition: background 0.1s;
+}
+.num-btn:active { background: #e3f2fd; }
+.submit-row {
+  display: flex; gap: 10px; width: 100%; max-width: 400px; justify-content: center;
+}
+.btn-submit {
+  background: #4caf50; color: #fff; font-size: 1.2rem; padding: 10px 32px;
+  border-radius: 14px; border: none; cursor: pointer; font-weight: bold; font-family: inherit;
+}
+.btn-submit:active { transform: scale(0.95); }
+
+/* てがき回答 */
+.draw-answer {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.draw-container {
+  display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; justify-content: center;
+}
+.draw-digit-group {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.draw-digit-label { font-size: 0.8rem; color: #999; }
+.draw-canvas {
+  border: 3px solid #90caf9; border-radius: 12px; background: #fff;
+  cursor: crosshair; touch-action: none;
+}
+.draw-result {
+  font-size: 0.85rem; color: #666; min-height: 20px;
+}
+.draw-result span {
+  font-size: 1.4rem; font-weight: bold; color: #1565c0;
+}
+.draw-controls {
+  display: flex; gap: 10px; align-items: center;
+}
+.btn-clear {
+  background: #ef5350; color: #fff; font-size: 1rem; padding: 8px 20px;
+  border-radius: 12px; border: none; cursor: pointer; font-weight: bold; font-family: inherit;
+}
+.recognized-area {
+  display: flex; align-items: center; gap: 8px; font-size: 1rem; color: #555;
+}
+.recognized-num {
+  font-size: 1.6rem; font-weight: bold; color: #1565c0;
+  background: #e3f2fd; padding: 4px 12px; border-radius: 8px;
+}
+
+/* ========== 答え合わせ画面 ========== */
+#screen-result {
+  align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #e8f0ff 0%, #fff8e1 100%);
+}
+.result-content {
+  text-align: center; padding: 20px; max-width: 600px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  max-height: 100vh; overflow-y: auto;
+}
+.result-title { font-size: 2rem; }
+.result-title.correct { color: #4caf50; }
+.result-title.wrong { color: #f44336; }
+.result-field {
+  width: 100%; max-width: 500px; height: 250px;
+  position: relative; overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #a5d6a7 40%, #81c784 100%);
+}
+.result-count {
+  font-size: 1.5rem; font-weight: bold; color: #333; min-height: 40px;
+}
+.count-badge {
+  position: absolute; font-size: 0.9rem; font-weight: bold;
+  color: #fff; background: #f44336; border-radius: 50%;
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 10;
+  animation: badgePop 0.3s ease;
+}
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+/* ========== レスポンシブ ========== */
+@media (max-width: 480px) {
+  .game-title { font-size: 2rem; }
+  .btn { font-size: 1rem; padding: 10px 20px; }
+  .btn-start-game { font-size: 1.2rem; padding: 14px 36px; }
+  .game-obj { font-size: 1.5rem; }
+  .answer-digit { width: 40px; height: 48px; font-size: 1.5rem; }
+  .num-btn { font-size: 1.2rem; padding: 8px 0; }
+  .stage-list { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+  .result-field { height: 200px; }
+  .draw-canvas { width: 100px !important; height: 100px !important; }
+}
+@media (min-width: 481px) and (max-width: 768px) {
+  .draw-canvas { width: 120px !important; height: 120px !important; }
+}
+@media (min-width: 769px) {
+  .game-field { max-height: 500px; }
+  .draw-canvas { width: 140px !important; height: 140px !important; }
+}

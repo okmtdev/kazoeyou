@@ -170,8 +170,8 @@
       if (stage.moving) startAnimation();
     });
 
-    // BGM開始
-    BGM.start();
+    // BGM開始 (難易度別)
+    BGM.start(difficulty);
   }
 
   $('#btn-back-stages').addEventListener('click', () => {

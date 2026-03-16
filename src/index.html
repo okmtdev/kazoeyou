@@ -8,39 +8,59 @@
 </head>
 <body>
   <div id="app">
-    <!-- タイトル画面 -->
+    <!-- タイトル画面: 難易度選択 -->
     <div id="screen-title" class="screen active">
       <div class="title-container">
         <h1 class="game-title">🔢 かぞえよう！</h1>
-        <div class="setting-group">
-          <p class="setting-label">なんいど</p>
-          <div class="btn-group">
-            <button class="btn btn-easy selected" data-difficulty="easy">かんたん</button>
-            <button class="btn btn-normal" data-difficulty="normal">ふつう</button>
-            <button class="btn btn-hard" data-difficulty="hard">むずかしい</button>
-          </div>
+        <p class="setting-label">なんいど を えらんでね</p>
+        <div class="difficulty-cards">
+          <button class="diff-card diff-easy" data-difficulty="easy">
+            <span class="diff-emoji">🌱</span>
+            <span class="diff-name">かんたん</span>
+          </button>
+          <button class="diff-card diff-normal" data-difficulty="normal">
+            <span class="diff-emoji">🌟</span>
+            <span class="diff-name">ふつう</span>
+          </button>
+          <button class="diff-card diff-hard" data-difficulty="hard">
+            <span class="diff-emoji">🔥</span>
+            <span class="diff-name">むずかしい</span>
+          </button>
         </div>
-        <div class="setting-group">
-          <p class="setting-label">かいとうほうほう</p>
-          <div class="btn-group">
-            <button class="btn btn-select selected" data-method="select">せんたく</button>
-            <button class="btn btn-draw" data-method="draw">てがき</button>
-          </div>
+      </div>
+    </div>
+
+    <!-- 回答方法選択画面 -->
+    <div id="screen-method" class="screen">
+      <div class="title-container">
+        <h2 class="method-title" id="method-difficulty-label"></h2>
+        <p class="setting-label">こたえかた を えらんでね</p>
+        <div class="method-cards">
+          <button class="method-card method-select" data-method="select">
+            <span class="method-emoji">🔘</span>
+            <span class="method-name">せんたく</span>
+            <span class="method-desc">すうじボタン で こたえる</span>
+          </button>
+          <button class="method-card method-draw" data-method="draw">
+            <span class="method-emoji">✏️</span>
+            <span class="method-name">てがき</span>
+            <span class="method-desc">ゆびや マウス で かく</span>
+          </button>
         </div>
-        <button id="btn-start" class="btn btn-start-game">はじめる！</button>
+        <button id="btn-back-to-title" class="btn btn-small">もどる</button>
       </div>
     </div>
 
     <!-- ステージ選択画面 -->
     <div id="screen-stages" class="screen">
       <div class="stage-header">
-        <button id="btn-back-title" class="btn btn-small">もどる</button>
+        <button id="btn-back-method" class="btn btn-small">もどる</button>
         <h2 id="stage-difficulty-label" class="stage-title"></h2>
       </div>
       <div id="stage-list" class="stage-list"></div>
     </div>
 
-    <!-- ゲーム画面 -->
+    <!-- ゲーム画面 (答え合わせもここで行う) -->
     <div id="screen-game" class="screen">
       <div class="game-header">
         <button id="btn-back-stages" class="btn btn-small">もどる</button>
@@ -49,17 +69,15 @@
       </div>
       <div id="game-field" class="game-field"></div>
       <div id="answer-area" class="answer-area"></div>
-    </div>
-
-    <!-- 答え合わせ画面 -->
-    <div id="screen-result" class="screen">
-      <div id="result-content" class="result-content">
+      <!-- 答え合わせオーバーレイ (ゲーム画面上に表示) -->
+      <div id="result-overlay" class="result-overlay" style="display:none;">
         <h2 id="result-title" class="result-title"></h2>
-        <div id="result-field" class="result-field"></div>
         <p id="result-count" class="result-count"></p>
-        <button id="btn-next" class="btn btn-start-game" style="display:none;">つぎへ</button>
-        <button id="btn-retry" class="btn btn-start-game" style="display:none;">もういちど</button>
-        <button id="btn-back-result" class="btn btn-small" style="display:none;">ステージへ</button>
+        <div id="result-buttons" class="result-buttons" style="display:none;">
+          <button id="btn-next" class="btn btn-result-action">つぎへ</button>
+          <button id="btn-retry" class="btn btn-result-action">もういちど</button>
+          <button id="btn-back-result" class="btn btn-small">ステージへ</button>
+        </div>
       </div>
     </div>
   </div>

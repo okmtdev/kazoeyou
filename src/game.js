@@ -9,11 +9,12 @@
   let objects = []; // フィールド上のオブジェクト
   let animationFrameId = null;
   let recognizers = []; // 手書き認識器
+  let isCheckingAnswer = false; // 答え合わせ中フラグ
 
   const DIFFICULTY_LABELS = {
-    easy: 'かんたん',
-    normal: 'ふつう',
-    hard: 'むずかしい',
+    easy: '🌱 かんたん',
+    normal: '🌟 ふつう',
+    hard: '🔥 むずかしい',
   };
 
   // ========== DOM要素 ==========
@@ -46,29 +47,30 @@
     return data[diff] && data[diff].includes(index);
   }
 
-  // ========== タイトル画面 ==========
+  // ========== タイトル画面: 難易度選択 ==========
   function initTitle() {
-    // 難易度ボタン
     $$('[data-difficulty]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        $$('[data-difficulty]').forEach((b) => b.classList.remove('selected'));
-        btn.classList.add('selected');
         difficulty = btn.dataset.difficulty;
+        showMethodScreen();
       });
-    });
-    // 回答方法ボタン
-    $$('[data-method]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        $$('[data-method]').forEach((b) => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        method = btn.dataset.method;
-      });
-    });
-    // はじめるボタン
-    $('#btn-start').addEventListener('click', () => {
-      showStageSelect();
     });
   }
+
+  // ========== 回答方法選択画面 ==========
+  function showMethodScreen() {
+    showScreen('method');
+    $('#method-difficulty-label').textContent = DIFFICULTY_LABELS[difficulty];
+  }
+
+  $$('[data-method]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      method = btn.dataset.method;
+      showStageSelect();
+    });
+  });
+
+  $('#btn-back-to-title').addEventListener('click', () => showScreen('title'));
 
   // ========== ステージ選択画面 ==========
   function showStageSelect() {
@@ -77,10 +79,13 @@
     const list = $('#stage-list');
     list.innerHTML = '';
     const stages = STAGES[difficulty];
-    stages.forEach((_, i) => {
+    stages.forEach((stage, i) => {
       const card = document.createElement('div');
       card.className = 'stage-card' + (isCleared(difficulty, i) ? ' cleared' : '');
-      card.innerHTML = `<div class="stage-num">${i + 1}</div>`;
+      card.innerHTML = `
+        <div class="stage-emoji">${stage.stageEmoji}</div>
+        <div class="stage-name">${stage.stageName}</div>
+      `;
       card.addEventListener('click', () => {
         currentStageIndex = i;
         startGame();
@@ -89,11 +94,18 @@
     });
   }
 
-  $('#btn-back-title').addEventListener('click', () => showScreen('title'));
+  $('#btn-back-method').addEventListener('click', () => showMethodScreen());
 
   // ========== ゲーム画面 ==========
   function startGame() {
+    isCheckingAnswer = false;
     showScreen('game');
+
+    // 答え合わせオーバーレイを非表示にリセット
+    const overlay = $('#result-overlay');
+    overlay.style.display = 'none';
+    $('#result-buttons').style.display = 'none';
+
     const stage = STAGES[difficulty][currentStageIndex];
     const questions = stage.question.join('　');
     $('#game-question').textContent = questions;
@@ -221,7 +233,6 @@
     const container = document.createElement('div');
     container.className = 'select-answer';
 
-    // 各ターゲットごとに回答表示
     const answerGroups = [];
     for (let t = 0; t < numTargets; t++) {
       const correctNum = stage.targetCount[t];
@@ -245,6 +256,7 @@
         digitEl.dataset.group = t;
         digitEl.dataset.digit = d;
         digitEl.addEventListener('click', () => {
+          if (isCheckingAnswer) return;
           if (digitEl.textContent !== '') {
             digitEl.textContent = '';
             digitEl.classList.remove('filled');
@@ -266,7 +278,7 @@
       btn.className = 'num-btn';
       btn.textContent = n;
       btn.addEventListener('click', () => {
-        // 最初の空きスロットに数字を入れる
+        if (isCheckingAnswer) return;
         for (const group of answerGroups) {
           for (const digit of group.digits) {
             if (digit.textContent === '') {
@@ -288,11 +300,12 @@
     submitBtn.className = 'btn-submit';
     submitBtn.textContent = 'こたえあわせ！';
     submitBtn.addEventListener('click', () => {
+      if (isCheckingAnswer) return;
       const answers = answerGroups.map((g) => {
         const numStr = g.digits.map((d) => d.textContent).join('');
         return numStr === '' ? -1 : parseInt(numStr, 10);
       });
-      if (answers.some((a) => a < 0 || isNaN(a))) return; // 未入力
+      if (answers.some((a) => a < 0 || isNaN(a))) return;
       checkAnswer(stage, answers);
     });
     submitRow.appendChild(submitBtn);
@@ -341,7 +354,6 @@
       }
       groupEl.appendChild(canvasRow);
 
-      // 読み取り結果表示
       const resultDiv = document.createElement('div');
       resultDiv.className = 'draw-result';
       resultDiv.innerHTML = 'よみとりけっか: <span>?</span>';
@@ -360,6 +372,7 @@
     clearBtn.className = 'btn-clear';
     clearBtn.textContent = 'くりあ';
     clearBtn.addEventListener('click', () => {
+      if (isCheckingAnswer) return;
       recognizers.forEach((r) => r.clear());
       groups.forEach((g) => {
         g.resultDiv.innerHTML = 'よみとりけっか: <span>?</span>';
@@ -371,6 +384,7 @@
     submitBtn.className = 'btn-submit';
     submitBtn.textContent = 'こたえあわせ！';
     submitBtn.addEventListener('click', () => {
+      if (isCheckingAnswer) return;
       const answers = [];
       let gi = 0;
       for (const group of groups) {
@@ -427,30 +441,42 @@
     }
   }
 
-  // ========== 答え合わせ ==========
+  // ========== 答え合わせ (ゲーム画面上で行う) ==========
   function checkAnswer(stage, answers) {
+    isCheckingAnswer = true;
     stopAnimation();
 
     const correct = stage.targetCount;
     const isCorrect = correct.every((c, i) => c === answers[i]);
 
-    showScreen('result');
-
-    const title = $('#result-title');
-    title.textContent = isCorrect ? '🎉 せいかい！' : '😢 ざんねん…';
-    title.className = 'result-title ' + (isCorrect ? 'correct' : 'wrong');
-
     if (isCorrect) {
       setClear(difficulty, currentStageIndex);
     }
 
-    // 答え合わせフィールドにオブジェクトを再配置
-    const resultField = $('#result-field');
-    resultField.innerHTML = '';
-    const countDisplay = $('#result-count');
-    countDisplay.textContent = '';
+    // ディストラクターを薄くする
+    const field = $('#game-field');
+    objects.forEach((obj) => {
+      obj.el.style.animation = 'none';
+      if (obj.type === 'distractor') {
+        obj.el.style.transition = 'opacity 0.5s';
+        obj.el.style.opacity = '0.2';
+      }
+    });
 
-    // ターゲットオブジェクトだけ集める（ターゲットインデックスごと）
+    // オーバーレイを表示 (回答エリアを隠す)
+    const answerArea = $('#answer-area');
+    answerArea.style.display = 'none';
+
+    const overlay = $('#result-overlay');
+    overlay.style.display = 'flex';
+    const resultTitle = $('#result-title');
+    const resultCount = $('#result-count');
+    const resultButtons = $('#result-buttons');
+    resultTitle.textContent = '';
+    resultCount.textContent = '';
+    resultButtons.style.display = 'none';
+
+    // ターゲットオブジェクトをインデックスごとに集める
     const targetObjs = {};
     objects.forEach((obj) => {
       if (obj.type === 'target') {
@@ -459,45 +485,22 @@
       }
     });
 
-    // 全オブジェクトの位置を結果フィールドに合わせてスケーリング
-    const gameField = $('#game-field');
-    const gw = gameField.clientWidth || 360;
-    const gh = gameField.clientHeight || 300;
-    const rw = resultField.clientWidth || 500;
-    const rh = resultField.clientHeight || 250;
-    const sx = rw / gw;
-    const sy = rh / gh;
-
-    // 全オブジェクトを結果フィールドに再配置
-    objects.forEach((obj) => {
-      const el = document.createElement('div');
-      el.className = 'game-obj';
-      el.textContent = obj.emoji;
-      el.style.left = (obj.x * sx) + 'px';
-      el.style.top = (obj.y * sy) + 'px';
-      el.style.fontSize = '1.5rem';
-      if (obj.type === 'distractor') {
-        el.style.opacity = '0.3';
-      }
-      el.dataset.type = obj.type;
-      el.dataset.targetIndex = obj.targetIndex;
-      resultField.appendChild(el);
-    });
-
-    // カウントアニメーション
-    animateCount(resultField, targetObjs, stage, countDisplay, isCorrect);
+    // ゲームフィールド上で直接カウントアニメーション
+    animateCount(field, targetObjs, stage, resultCount, resultTitle, isCorrect);
   }
 
-  function animateCount(field, targetObjs, stage, countDisplay, isCorrect) {
+  function animateCount(field, targetObjs, stage, countDisplay, titleDisplay, isCorrect) {
     const targetIndices = Object.keys(targetObjs).sort();
     let tIdx = 0;
 
     function countNextGroup() {
       if (tIdx >= targetIndices.length) {
-        // 全カウント完了
+        // 全カウント完了 → 結果表示
         setTimeout(() => {
+          titleDisplay.textContent = isCorrect ? '🎉 せいかい！' : '😢 ざんねん…';
+          titleDisplay.className = 'result-title ' + (isCorrect ? 'correct' : 'wrong');
           showResultButtons(isCorrect);
-        }, 500);
+        }, 600);
         return;
       }
 
@@ -517,24 +520,21 @@
         }
 
         const obj = objs[count];
-        // 対応するDOM要素にバッジをつける
-        const elements = field.querySelectorAll(`.game-obj[data-target-index="${ti}"]`);
-        if (elements[count]) {
-          elements[count].style.transform = 'scale(1.3)';
-          setTimeout(() => {
-            elements[count].style.transform = 'scale(1)';
-          }, 300);
+        // 対象のDOM要素をハイライト
+        obj.el.style.transition = 'transform 0.2s';
+        obj.el.style.transform = 'scale(1.4)';
+        obj.el.style.zIndex = '5';
+        setTimeout(() => {
+          obj.el.style.transform = 'scale(1)';
+        }, 300);
 
-          // 数字バッジ
-          const badge = document.createElement('div');
-          badge.className = 'count-badge';
-          badge.textContent = count + 1;
-          const rect = elements[count].getBoundingClientRect();
-          const fieldRect = field.getBoundingClientRect();
-          badge.style.left = (parseFloat(elements[count].style.left) + 20) + 'px';
-          badge.style.top = (parseFloat(elements[count].style.top) - 8) + 'px';
-          field.appendChild(badge);
-        }
+        // 数字バッジをフィールドに直接追加
+        const badge = document.createElement('div');
+        badge.className = 'count-badge';
+        badge.textContent = count + 1;
+        badge.style.left = (obj.x + 20) + 'px';
+        badge.style.top = (obj.y - 8) + 'px';
+        field.appendChild(badge);
 
         count++;
         countDisplay.textContent = `${emoji}  : ${count}`;
@@ -551,6 +551,7 @@
     const btnNext = $('#btn-next');
     const btnRetry = $('#btn-retry');
     const btnBack = $('#btn-back-result');
+    const resultButtons = $('#result-buttons');
 
     btnNext.style.display = 'none';
     btnRetry.style.display = 'none';
@@ -562,6 +563,8 @@
     if (!isCorrect) {
       btnRetry.style.display = 'inline-block';
     }
+
+    resultButtons.style.display = 'flex';
   }
 
   $('#btn-next').addEventListener('click', () => {

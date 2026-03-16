@@ -1,16 +1,12 @@
 /**
  * ステージデータ定義
- * 各ステージは以下のプロパティを持つ:
- *   target: 数える対象の絵文字(1つ or 2つ)
- *   targetCount: 正解の数(1つ or 2つ)
- *   distractors: 数えなくてよいもの
- *   distractorCount: 数えなくてよいものの数
- *   moving: 動くかどうか
  */
 
 const STAGES = {
   easy: [
     {
+      stageName: 'りんご',
+      stageEmoji: '🍎',
       target: ['🍎'],
       targetCount: [5],
       distractors: ['🌿'],
@@ -19,6 +15,8 @@ const STAGES = {
       question: ['🍎 は いくつ？'],
     },
     {
+      stageName: 'さかな',
+      stageEmoji: '🐟',
       target: ['🐟'],
       targetCount: [7],
       distractors: ['🪨'],
@@ -27,6 +25,8 @@ const STAGES = {
       question: ['🐟 は いくつ？'],
     },
     {
+      stageName: 'おほし',
+      stageEmoji: '⭐',
       target: ['⭐'],
       targetCount: [4],
       distractors: ['☁️'],
@@ -35,6 +35,8 @@ const STAGES = {
       question: ['⭐ は いくつ？'],
     },
     {
+      stageName: 'さくら',
+      stageEmoji: '🌸',
       target: ['🌸'],
       targetCount: [8],
       distractors: ['🍃'],
@@ -43,6 +45,8 @@ const STAGES = {
       question: ['🌸 は いくつ？'],
     },
     {
+      stageName: 'ひよこ',
+      stageEmoji: '🐤',
       target: ['🐤'],
       targetCount: [6],
       distractors: ['🌳'],
@@ -53,6 +57,8 @@ const STAGES = {
   ],
   normal: [
     {
+      stageName: 'ちょうちょ',
+      stageEmoji: '🦋',
       target: ['🦋'],
       targetCount: [6],
       distractors: ['🌼'],
@@ -61,6 +67,8 @@ const STAGES = {
       question: ['🦋 は いくつ？'],
     },
     {
+      stageName: 'おさかな',
+      stageEmoji: '🐠',
       target: ['🐠'],
       targetCount: [8],
       distractors: ['🫧'],
@@ -69,6 +77,8 @@ const STAGES = {
       question: ['🐠 は いくつ？'],
     },
     {
+      stageName: 'はち',
+      stageEmoji: '🐝',
       target: ['🐝'],
       targetCount: [5],
       distractors: ['🌻'],
@@ -77,6 +87,8 @@ const STAGES = {
       question: ['🐝 は いくつ？'],
     },
     {
+      stageName: 'ふうせん',
+      stageEmoji: '🎈',
       target: ['🎈'],
       targetCount: [9],
       distractors: ['☁️'],
@@ -85,6 +97,8 @@ const STAGES = {
       question: ['🎈 は いくつ？'],
     },
     {
+      stageName: 'てんとう',
+      stageEmoji: '🐞',
       target: ['🐞'],
       targetCount: [7],
       distractors: ['🍀'],
@@ -95,6 +109,8 @@ const STAGES = {
   ],
   hard: [
     {
+      stageName: 'りんごとみかん',
+      stageEmoji: '🍎🍊',
       target: ['🍎', '🍊'],
       targetCount: [5, 4],
       distractors: ['🌿', '🍂', '🪨'],
@@ -103,6 +119,8 @@ const STAGES = {
       question: ['🍎 は いくつ？', '🍊 は いくつ？'],
     },
     {
+      stageName: 'さかなとたこ',
+      stageEmoji: '🐟🐙',
       target: ['🐟', '🐙'],
       targetCount: [6, 3],
       distractors: ['🫧', '🪨', '🌊'],
@@ -111,6 +129,8 @@ const STAGES = {
       question: ['🐟 は いくつ？', '🐙 は いくつ？'],
     },
     {
+      stageName: 'ほしとつき',
+      stageEmoji: '⭐🌙',
       target: ['⭐', '🌙'],
       targetCount: [8, 5],
       distractors: ['☁️', '✈️', '🪁'],
@@ -119,6 +139,8 @@ const STAGES = {
       question: ['⭐ は いくつ？', '🌙 は いくつ？'],
     },
     {
+      stageName: 'さくらとはな',
+      stageEmoji: '🌸🌺',
       target: ['🌸', '🌺'],
       targetCount: [7, 4],
       distractors: ['🍃', '🐛', '🌿', '🪲'],
@@ -127,6 +149,8 @@ const STAGES = {
       question: ['🌸 は いくつ？', '🌺 は いくつ？'],
     },
     {
+      stageName: 'ひよことかえる',
+      stageEmoji: '🐤🐸',
       target: ['🐤', '🐸'],
       targetCount: [6, 5],
       distractors: ['🌳', '🍄', '🪺', '🌿'],

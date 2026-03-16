@@ -1,0 +1,17 @@
+{
+  "name": "kazoeyou",
+  "version": "1.0.0",
+  "description": "かぞえよう - こどもようかずかぞえゲーム",
+  "scripts": {
+    "dev": "python3 -m http.server 8080 --directory src",
+    "build": "mkdir -p dist && cp -r src/* dist/",
+    "clean": "rm -rf dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:46503/git/okmtdev/kazoeyou"
+  },
+  "keywords": ["kids", "game", "counting"],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>かぞえよう！</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- タイトル画面: 難易度選択 -->
+    <div id="screen-title" class="screen active">
+      <div class="title-container">
+        <h1 class="game-title">🔢 かぞえよう！</h1>
+        <p class="setting-label">なんいど を えらんでね</p>
+        <div class="difficulty-cards">
+          <button class="diff-card diff-easy" data-difficulty="easy">
+            <span class="diff-emoji">🌱</span>
+            <span class="diff-name">かんたん</span>
+          </button>
+          <button class="diff-card diff-normal" data-difficulty="normal">
+            <span class="diff-emoji">🌟</span>
+            <span class="diff-name">ふつう</span>
+          </button>
+          <button class="diff-card diff-hard" data-difficulty="hard">
+            <span class="diff-emoji">🔥</span>
+            <span class="diff-name">むずかしい</span>
+          </button>
+          <button class="diff-card diff-extra" data-difficulty="extra" id="btn-extra" style="display:none;">
+            <span class="diff-emoji">👑</span>
+            <span class="diff-name">えくすとら</span>
+          </button>
+        </div>
+      </div>
+      <!-- SE / BGM コントロール: 右下固定 -->
+      <div class="sound-controls">
+        <button id="btn-se-toggle" class="btn-sound-ctrl" title="SE ON/OFF">🔊 SE</button>
+        <button id="btn-bgm-toggle" class="btn-sound-ctrl" title="BGM ON/OFF">🔊 BGM</button>
+      </div>
+    </div>
+
+    <!-- 回答方法選択画面 -->
+    <div id="screen-method" class="screen">
+      <button id="btn-back-to-title" class="btn btn-small method-back">もどる</button>
+      <div class="title-container">
+        <h2 class="method-title" id="method-difficulty-label"></h2>
+        <p class="setting-label">こたえかた を えらんでね</p>
+        <div class="method-cards">
+          <button class="method-card method-select" data-method="select">
+            <span class="method-emoji">🔘</span>
+            <span class="method-name">せんたく</span>
+            <span class="method-desc">すうじボタン で こたえる</span>
+          </button>
+          <button class="method-card method-draw" data-method="draw">
+            <span class="method-emoji">✏️</span>
+            <span class="method-name">てがき</span>
+            <span class="method-desc">ゆびや マウス で かく</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ステージ選択画面 -->
+    <div id="screen-stages" class="screen">
+      <div class="stage-header">
+        <button id="btn-back-method" class="btn btn-small">もどる</button>
+        <h2 id="stage-difficulty-label" class="stage-title"></h2>
+      </div>
+      <div id="stage-list" class="stage-list"></div>
+    </div>
+
+    <!-- ゲーム画面 (答え合わせもここで行う) -->
+    <div id="screen-game" class="screen">
+      <div class="game-header">
+        <button id="btn-back-stages" class="btn btn-small">もどる</button>
+        <p id="game-question" class="game-question"></p>
+        <p id="game-stage-num" class="game-stage-num"></p>
+      </div>
+      <div id="game-field" class="game-field"></div>
+      <div id="answer-area" class="answer-area"></div>
+      <!-- 答え合わせオーバーレイ (ゲーム画面上に表示) -->
+      <div id="result-overlay" class="result-overlay" style="display:none;">
+        <h2 id="result-title" class="result-title"></h2>
+        <p id="result-count" class="result-count"></p>
+        <div id="result-summary" class="result-summary"></div>
+        <div id="result-buttons" class="result-buttons" style="display:none;">
+          <button id="btn-next" class="btn btn-result-action">つぎへ</button>
+          <button id="btn-retry" class="btn btn-result-action">もういちど</button>
+          <button id="btn-back-result" class="btn btn-small">ステージせんたく</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="stages.js"></script>
+  <script src="handwriting.js"></script>
+  <script src="sound.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

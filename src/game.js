@@ -6,15 +6,16 @@
   let difficulty = 'easy';
   let method = 'select';
   let currentStageIndex = 0;
-  let objects = []; // フィールド上のオブジェクト
+  let objects = [];
   let animationFrameId = null;
-  let recognizers = []; // 手書き認識器
-  let isCheckingAnswer = false; // 答え合わせ中フラグ
+  let recognizers = [];
+  let isCheckingAnswer = false;
 
   const DIFFICULTY_LABELS = {
     easy: '🌱 かんたん',
     normal: '🌟 ふつう',
     hard: '🔥 むずかしい',
+    extra: '👑 えくすとら',
   };
 
   // ========== DOM要素 ==========
@@ -25,7 +26,10 @@
   function showScreen(id) {
     $$('.screen').forEach((s) => s.classList.remove('active'));
     $(`#screen-${id}`).classList.add('active');
-    if (id !== 'game') stopAnimation();
+    if (id !== 'game') {
+      stopAnimation();
+      BGM.stop();
+    }
   }
 
   // ========== localStorage ==========
@@ -47,12 +51,38 @@
     return data[diff] && data[diff].includes(index);
   }
 
-  // ========== SE トグル ==========
-  $('#btn-sound-toggle').addEventListener('click', () => {
+  // むずかしい全クリ判定
+  function isHardAllCleared() {
+    const data = getClearData();
+    if (!data.hard) return false;
+    for (let i = 0; i < STAGES.hard.length; i++) {
+      if (!data.hard.includes(i)) return false;
+    }
+    return true;
+  }
+
+  // えくすとらボタンの表示更新
+  function updateExtraButton() {
+    const btn = $('#btn-extra');
+    btn.style.display = isHardAllCleared() ? 'flex' : 'none';
+  }
+
+  // ========== SE / BGM トグル ==========
+  $('#btn-se-toggle').addEventListener('click', () => {
     SE.init();
-    const on = SE.toggle();
-    $('#btn-sound-toggle').textContent = on ? '🔊' : '🔇';
+    const on = SE.toggleSE();
+    const btn = $('#btn-se-toggle');
+    btn.textContent = on ? '🔊 SE' : '🔇 SE';
+    btn.classList.toggle('btn-sound-off', !on);
     if (on) SE.tap();
+  });
+
+  $('#btn-bgm-toggle').addEventListener('click', () => {
+    BGM.init();
+    const on = BGM.toggle();
+    const btn = $('#btn-bgm-toggle');
+    btn.textContent = on ? '🔊 BGM' : '🔇 BGM';
+    btn.classList.toggle('btn-sound-off', !on);
   });
 
   // ========== タイトル画面: 難易度選択 ==========
@@ -84,6 +114,7 @@
   $('#btn-back-to-title').addEventListener('click', () => {
     SE.tap();
     showScreen('title');
+    updateExtraButton();
   });
 
   // ========== ステージ選択画面 ==========
@@ -119,16 +150,16 @@
     isCheckingAnswer = false;
     showScreen('game');
 
-    // 答え合わせオーバーレイを非表示にリセット & 回答エリアを再表示
     const overlay = $('#result-overlay');
     overlay.style.display = 'none';
     $('#result-buttons').style.display = 'none';
     $('#answer-area').style.display = '';
 
-    const stage = STAGES[difficulty][currentStageIndex];
+    const stages = STAGES[difficulty];
+    const stage = stages[currentStageIndex];
     const questions = stage.question.join('　');
     $('#game-question').textContent = questions;
-    $('#game-stage-num').textContent = `${currentStageIndex + 1} / 5`;
+    $('#game-stage-num').textContent = `${currentStageIndex + 1} / ${stages.length}`;
 
     // 回答エリアを先にセットアップ (フィールドサイズ確定のため)
     setupAnswerArea(stage);
@@ -138,11 +169,15 @@
       setupField(stage);
       if (stage.moving) startAnimation();
     });
+
+    // BGM開始
+    BGM.start();
   }
 
   $('#btn-back-stages').addEventListener('click', () => {
     SE.tap();
     stopAnimation();
+    BGM.stop();
     showStageSelect();
   });
 
@@ -156,14 +191,12 @@
     const fw = fieldRect.width || 360;
     const fh = fieldRect.height || 300;
 
-    // ターゲットを配置
     stage.target.forEach((emoji, ti) => {
       for (let i = 0; i < stage.targetCount[ti]; i++) {
         createObject(field, emoji, fw, fh, stage.moving, 'target', ti);
       }
     });
 
-    // ディストラクターを配置
     for (let i = 0; i < stage.distractorCount; i++) {
       const emoji = stage.distractors[i % stage.distractors.length];
       createObject(field, emoji, fw, fh, stage.moving, 'distractor', -1);
@@ -177,7 +210,6 @@
     el.dataset.type = type;
     el.dataset.targetIndex = targetIndex;
 
-    // 上下左右に十分なマージンを確保
     const marginX = 30;
     const marginTop = 20;
     const marginBottom = 40;
@@ -188,14 +220,10 @@
     el.style.top = y + 'px';
 
     const obj = {
-      el,
-      x,
-      y,
+      el, x, y,
       vx: moving ? (Math.random() - 0.5) * 1.2 : 0,
       vy: moving ? (Math.random() - 0.5) * 1.2 : 0,
-      type,
-      targetIndex,
-      emoji,
+      type, targetIndex, emoji,
     };
 
     if (!moving) {
@@ -220,13 +248,10 @@
         if (obj.vx === 0 && obj.vy === 0) return;
         obj.x += obj.vx;
         obj.y += obj.vy;
-
         if (obj.x < margin || obj.x > fw - margin) obj.vx *= -1;
         if (obj.y < margin || obj.y > fh - marginBottom) obj.vy *= -1;
-
         obj.x = Math.max(margin, Math.min(fw - margin, obj.x));
         obj.y = Math.max(margin, Math.min(fh - marginBottom, obj.y));
-
         obj.el.style.left = obj.x + 'px';
         obj.el.style.top = obj.y + 'px';
       });
@@ -247,9 +272,7 @@
     const area = $('#answer-area');
     area.innerHTML = '';
     recognizers = [];
-
     const numTargets = stage.target.length;
-
     if (method === 'select') {
       setupSelectAnswer(area, stage, numTargets);
     } else {
@@ -266,18 +289,14 @@
     for (let t = 0; t < numTargets; t++) {
       const correctNum = stage.targetCount[t];
       const numDigits = correctNum >= 10 ? 2 : 1;
-
       const groupDiv = document.createElement('div');
       groupDiv.style.cssText = 'display:flex; align-items:center; gap:8px; margin-bottom:4px;';
-
       const label = document.createElement('span');
       label.textContent = stage.target[t];
       label.style.fontSize = '1.5rem';
       groupDiv.appendChild(label);
-
       const display = document.createElement('div');
       display.className = 'answer-display';
-
       const digits = [];
       for (let d = 0; d < numDigits; d++) {
         const digitEl = document.createElement('div');
@@ -300,7 +319,6 @@
       answerGroups.push({ digits, numDigits });
     }
 
-    // 数字パッド (0-9)
     const pad = document.createElement('div');
     pad.className = 'number-pad';
     for (let n = 0; n <= 9; n++) {
@@ -324,7 +342,6 @@
     }
     container.appendChild(pad);
 
-    // 提出ボタン
     const submitRow = document.createElement('div');
     submitRow.className = 'submit-row';
     const submitBtn = document.createElement('button');
@@ -342,7 +359,6 @@
     });
     submitRow.appendChild(submitBtn);
     container.appendChild(submitRow);
-
     area.appendChild(container);
   }
 
@@ -350,30 +366,24 @@
   function setupDrawAnswer(area, stage, numTargets) {
     const container = document.createElement('div');
     container.className = 'draw-answer';
-
     const drawContainer = document.createElement('div');
     drawContainer.className = 'draw-container';
-
     const canvasSize = window.innerWidth < 480 ? 100 : window.innerWidth < 769 ? 120 : 140;
 
     const groups = [];
     for (let t = 0; t < numTargets; t++) {
       const correctNum = stage.targetCount[t];
       const numDigits = correctNum >= 10 ? 2 : 1;
-
       const groupEl = document.createElement('div');
       groupEl.className = 'draw-digit-group';
-
       const label = document.createElement('div');
       label.className = 'draw-digit-label';
       label.textContent = stage.target[t];
       label.style.fontSize = '1.5rem';
       groupEl.appendChild(label);
-
       const canvases = [];
       const canvasRow = document.createElement('div');
       canvasRow.style.cssText = 'display:flex; gap:4px;';
-
       for (let d = 0; d < numDigits; d++) {
         const canvas = document.createElement('canvas');
         canvas.className = 'draw-canvas';
@@ -385,21 +395,17 @@
         canvases.push(canvas);
       }
       groupEl.appendChild(canvasRow);
-
       const resultDiv = document.createElement('div');
       resultDiv.className = 'draw-result';
       resultDiv.innerHTML = 'よみとりけっか: <span>?</span>';
       groupEl.appendChild(resultDiv);
-
       drawContainer.appendChild(groupEl);
       groups.push({ canvases, resultDiv, numDigits });
     }
     container.appendChild(drawContainer);
 
-    // コントロール
     const controls = document.createElement('div');
     controls.className = 'draw-controls';
-
     const clearBtn = document.createElement('button');
     clearBtn.className = 'btn-clear';
     clearBtn.textContent = 'くりあ';
@@ -425,10 +431,7 @@
         for (let d = 0; d < group.numDigits; d++) {
           const r = recognizers[gi + d];
           const digit = r.recognize();
-          if (digit < 0) {
-            numStr = '';
-            break;
-          }
+          if (digit < 0) { numStr = ''; break; }
           numStr += digit;
         }
         gi += group.numDigits;
@@ -440,17 +443,13 @@
     });
     controls.appendChild(submitBtn);
     container.appendChild(controls);
-
     area.appendChild(container);
 
-    // 認識器を初期化
     requestAnimationFrame(() => {
       for (const group of groups) {
         for (const canvas of group.canvases) {
           const rec = new HandwritingRecognizer(canvas);
-          rec.onStrokeEnd = () => {
-            updateRecognitionResults(groups);
-          };
+          rec.onStrokeEnd = () => updateRecognitionResults(groups);
           recognizers.push(rec);
         }
       }
@@ -475,19 +474,16 @@
     }
   }
 
-  // ========== 答え合わせ (ゲーム画面上で行う) ==========
+  // ========== 答え合わせ ==========
   function checkAnswer(stage, answers) {
     isCheckingAnswer = true;
     stopAnimation();
+    BGM.stop();
 
     const correct = stage.targetCount;
     const isCorrect = correct.every((c, i) => c === answers[i]);
+    if (isCorrect) setClear(difficulty, currentStageIndex);
 
-    if (isCorrect) {
-      setClear(difficulty, currentStageIndex);
-    }
-
-    // ディストラクターを薄くする
     const field = $('#game-field');
     objects.forEach((obj) => {
       obj.el.style.animation = 'none';
@@ -497,10 +493,7 @@
       }
     });
 
-    // オーバーレイを表示 (回答エリアを隠す)
-    const answerArea = $('#answer-area');
-    answerArea.style.display = 'none';
-
+    $('#answer-area').style.display = 'none';
     const overlay = $('#result-overlay');
     overlay.style.display = 'flex';
     const resultTitle = $('#result-title');
@@ -512,7 +505,6 @@
     resultSummary.innerHTML = '';
     resultButtons.style.display = 'none';
 
-    // ターゲットオブジェクトをインデックスごとに集める
     const targetObjs = {};
     objects.forEach((obj) => {
       if (obj.type === 'target') {
@@ -521,7 +513,6 @@
       }
     });
 
-    // ゲームフィールド上で直接カウントアニメーション
     animateCount(field, targetObjs, stage, resultCount, resultTitle, resultSummary, isCorrect, answers);
   }
 
@@ -531,9 +522,7 @@
 
     function countNextGroup() {
       if (tIdx >= targetIndices.length) {
-        // 全カウント完了 → サマリー表示
         setTimeout(() => {
-          // 全ターゲットの正解数を一覧表示
           let summaryHtml = '';
           for (let i = 0; i < stage.target.length; i++) {
             const emoji = stage.target[i];
@@ -547,17 +536,9 @@
             </div>`;
           }
           summaryDisplay.innerHTML = summaryHtml;
-
           titleDisplay.textContent = isCorrect ? '🎉 せいかい！' : '😢 ざんねん…';
           titleDisplay.className = 'result-title ' + (isCorrect ? 'correct' : 'wrong');
-
-          // SE: 正解/不正解
-          if (isCorrect) {
-            SE.correct();
-          } else {
-            SE.wrong();
-          }
-
+          if (isCorrect) { SE.correct(); } else { SE.wrong(); }
           showResultButtons(isCorrect);
         }, 600);
         return;
@@ -567,7 +548,6 @@
       const objs = targetObjs[ti];
       const emoji = stage.target[ti];
       let count = 0;
-
       countDisplay.textContent = `${emoji}  : 0`;
 
       function countNext() {
@@ -578,14 +558,11 @@
           setTimeout(countNextGroup, 800);
           return;
         }
-
         const obj = objs[count];
         obj.el.style.transition = 'transform 0.2s';
         obj.el.style.transform = 'scale(1.4)';
         obj.el.style.zIndex = '5';
-        setTimeout(() => {
-          obj.el.style.transform = 'scale(1)';
-        }, 300);
+        setTimeout(() => { obj.el.style.transform = 'scale(1)'; }, 300);
 
         const badge = document.createElement('div');
         badge.className = 'count-badge';
@@ -594,17 +571,13 @@
         badge.style.top = (obj.y - 8) + 'px';
         field.appendChild(badge);
 
-        // SE: カウント音
         SE.count();
-
         count++;
         countDisplay.textContent = `${emoji}  : ${count}`;
         setTimeout(countNext, 450);
       }
-
       setTimeout(countNext, 400);
     }
-
     countNextGroup();
   }
 
@@ -613,18 +586,18 @@
     const btnRetry = $('#btn-retry');
     const btnBack = $('#btn-back-result');
     const resultButtons = $('#result-buttons');
+    const stages = STAGES[difficulty];
 
     btnNext.style.display = 'none';
     btnRetry.style.display = 'none';
     btnBack.style.display = 'inline-block';
 
-    if (isCorrect && currentStageIndex < 4) {
+    if (isCorrect && currentStageIndex < stages.length - 1) {
       btnNext.style.display = 'inline-block';
     }
     if (!isCorrect) {
       btnRetry.style.display = 'inline-block';
     }
-
     resultButtons.style.display = 'flex';
   }
 
@@ -644,5 +617,6 @@
 
   // ========== 初期化 ==========
   initTitle();
+  updateExtraButton();
   showScreen('title');
 })();

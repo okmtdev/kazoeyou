@@ -12,7 +12,6 @@
     <div id="screen-title" class="screen active">
       <div class="title-container">
         <h1 class="game-title">🔢 かぞえよう！</h1>
-        <button id="btn-sound-toggle" class="btn-sound" title="おと ON/OFF">🔊</button>
         <p class="setting-label">なんいど を えらんでね</p>
         <div class="difficulty-cards">
           <button class="diff-card diff-easy" data-difficulty="easy">
@@ -27,7 +26,16 @@
             <span class="diff-emoji">🔥</span>
             <span class="diff-name">むずかしい</span>
           </button>
+          <button class="diff-card diff-extra" data-difficulty="extra" id="btn-extra" style="display:none;">
+            <span class="diff-emoji">👑</span>
+            <span class="diff-name">えくすとら</span>
+          </button>
         </div>
+      </div>
+      <!-- SE / BGM コントロール: 右下固定 -->
+      <div class="sound-controls">
+        <button id="btn-se-toggle" class="btn-sound-ctrl" title="SE ON/OFF">🔊 SE</button>
+        <button id="btn-bgm-toggle" class="btn-sound-ctrl btn-sound-off" title="BGM ON/OFF">🔇 BGM</button>
       </div>
     </div>
 

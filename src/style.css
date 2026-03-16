@@ -86,12 +86,13 @@ html, body {
   gap: 16px; padding: 8px; overflow-y: auto; flex: 1;
 }
 .stage-card {
-  background: #fff; border-radius: 20px; padding: 20px 12px;
+  background: #fff; border-radius: 20px;
   text-align: center; cursor: pointer;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   transition: transform 0.15s;
   position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  aspect-ratio: 1 / 1;
 }
 .stage-card:active { transform: scale(0.95); }
 .stage-emoji { font-size: 2.2rem; line-height: 1; }
@@ -117,7 +118,7 @@ html, body {
 
 .game-field {
   flex: 1; position: relative; overflow: hidden;
-  background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #a5d6a7 40%, #81c784 100%);
+  background: #f0f0f0;
   min-height: 200px;
 }
 
@@ -222,8 +223,17 @@ html, body {
 .result-title.correct { color: #4caf50; }
 .result-title.wrong { color: #f44336; }
 .result-count {
-  font-size: 1.4rem; font-weight: bold; color: #333; min-height: 32px;
+  font-size: 1.3rem; font-weight: bold; color: #333; min-height: 28px;
 }
+.result-summary {
+  display: flex; flex-direction: column; gap: 4px; font-size: 1rem; color: #555;
+}
+.result-summary-row {
+  display: flex; align-items: center; gap: 6px; justify-content: center;
+}
+.result-summary-row .answer-val { color: #1565c0; font-weight: bold; }
+.result-summary-row .correct-val { color: #4caf50; font-weight: bold; }
+.result-summary-row .wrong-val { color: #f44336; font-weight: bold; }
 .result-buttons {
   display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center;
 }

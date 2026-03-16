@@ -101,10 +101,11 @@
     isCheckingAnswer = false;
     showScreen('game');
 
-    // 答え合わせオーバーレイを非表示にリセット
+    // 答え合わせオーバーレイを非表示にリセット & 回答エリアを再表示
     const overlay = $('#result-overlay');
     overlay.style.display = 'none';
     $('#result-buttons').style.display = 'none';
+    $('#answer-area').style.display = '';
 
     const stage = STAGES[difficulty][currentStageIndex];
     const questions = stage.question.join('　');
@@ -471,9 +472,11 @@
     overlay.style.display = 'flex';
     const resultTitle = $('#result-title');
     const resultCount = $('#result-count');
+    const resultSummary = $('#result-summary');
     const resultButtons = $('#result-buttons');
     resultTitle.textContent = '';
     resultCount.textContent = '';
+    resultSummary.innerHTML = '';
     resultButtons.style.display = 'none';
 
     // ターゲットオブジェクトをインデックスごとに集める
@@ -486,17 +489,34 @@
     });
 
     // ゲームフィールド上で直接カウントアニメーション
-    animateCount(field, targetObjs, stage, resultCount, resultTitle, isCorrect);
+    animateCount(field, targetObjs, stage, resultCount, resultTitle, resultSummary, isCorrect, answers);
   }
 
-  function animateCount(field, targetObjs, stage, countDisplay, titleDisplay, isCorrect) {
+  function animateCount(field, targetObjs, stage, countDisplay, titleDisplay, summaryDisplay, isCorrect, answers) {
     const targetIndices = Object.keys(targetObjs).sort();
     let tIdx = 0;
+    // 各ターゲットのカウント結果を蓄積
+    const countResults = [];
 
     function countNextGroup() {
       if (tIdx >= targetIndices.length) {
-        // 全カウント完了 → 結果表示
+        // 全カウント完了 → サマリー表示
         setTimeout(() => {
+          // 全ターゲットの正解数を一覧表示
+          let summaryHtml = '';
+          for (let i = 0; i < stage.target.length; i++) {
+            const emoji = stage.target[i];
+            const correctVal = stage.targetCount[i];
+            const userVal = answers[i];
+            const match = correctVal === userVal;
+            summaryHtml += `<div class="result-summary-row">
+              ${emoji}
+              きみのこたえ: <span class="${match ? 'correct-val' : 'wrong-val'}">${userVal}</span>
+              せいかい: <span class="correct-val">${correctVal}</span>
+            </div>`;
+          }
+          summaryDisplay.innerHTML = summaryHtml;
+
           titleDisplay.textContent = isCorrect ? '🎉 せいかい！' : '😢 ざんねん…';
           titleDisplay.className = 'result-title ' + (isCorrect ? 'correct' : 'wrong');
           showResultButtons(isCorrect);
@@ -514,13 +534,13 @@
       function countNext() {
         if (count >= objs.length) {
           countDisplay.textContent = `${emoji}  : ${objs.length} こ！`;
+          countResults.push({ emoji, total: objs.length });
           tIdx++;
           setTimeout(countNextGroup, 800);
           return;
         }
 
         const obj = objs[count];
-        // 対象のDOM要素をハイライト
         obj.el.style.transition = 'transform 0.2s';
         obj.el.style.transform = 'scale(1.4)';
         obj.el.style.zIndex = '5';
@@ -528,7 +548,6 @@
           obj.el.style.transform = 'scale(1)';
         }, 300);
 
-        // 数字バッジをフィールドに直接追加
         const badge = document.createElement('div');
         badge.className = 'count-badge';
         badge.textContent = count + 1;

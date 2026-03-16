@@ -26,10 +26,92 @@
   function showScreen(id) {
     $$('.screen').forEach((s) => s.classList.remove('active'));
     $(`#screen-${id}`).classList.add('active');
-    if (id !== 'game') {
-      stopAnimation();
-      BGM.stop();
+    if (id === 'title') {
+      createTitleBgEmojis();
+      BGM.start('easy');
+    } else {
+      clearTitleBgEmojis();
+      if (id !== 'game') {
+        stopAnimation();
+        BGM.stop();
+      }
     }
+  }
+
+  // ========== タイトル背景の浮遊する絵文字 ==========
+  let titleBgAnimId = null;
+  let titleBgObjects = [];
+
+  function createTitleBgEmojis() {
+    clearTitleBgEmojis();
+    const container = $('#title-bg-emojis');
+    if (!container) return;
+    container.innerHTML = '';
+    titleBgObjects = [];
+
+    // かんたんステージの絵文字を集める
+    const emojis = [];
+    STAGES.easy.forEach((stage) => {
+      stage.target.forEach((e) => emojis.push(e));
+      stage.distractors.forEach((e) => emojis.push(e));
+    });
+
+    const count = 20;
+    const cw = window.innerWidth;
+    const ch = window.innerHeight;
+
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'title-bg-emoji';
+      el.textContent = emojis[i % emojis.length];
+      const size = 1.6 + Math.random() * 1.6;
+      el.style.fontSize = size + 'rem';
+      el.style.opacity = 0.12 + Math.random() * 0.18;
+
+      const x = Math.random() * cw;
+      const y = Math.random() * ch;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+
+      const duration = 6 + Math.random() * 8;
+      el.style.animationDuration = duration + 's';
+      el.style.animationDelay = (Math.random() * -duration) + 's';
+
+      const obj = {
+        el, x, y,
+        vx: (Math.random() - 0.5) * 0.6,
+        vy: (Math.random() - 0.5) * 0.6,
+      };
+      titleBgObjects.push(obj);
+      container.appendChild(el);
+    }
+
+    function animateTitleBg() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      titleBgObjects.forEach((obj) => {
+        obj.x += obj.vx;
+        obj.y += obj.vy;
+        if (obj.x < -40) obj.x = w + 20;
+        if (obj.x > w + 40) obj.x = -20;
+        if (obj.y < -40) obj.y = h + 20;
+        if (obj.y > h + 40) obj.y = -20;
+        obj.el.style.left = obj.x + 'px';
+        obj.el.style.top = obj.y + 'px';
+      });
+      titleBgAnimId = requestAnimationFrame(animateTitleBg);
+    }
+    titleBgAnimId = requestAnimationFrame(animateTitleBg);
+  }
+
+  function clearTitleBgEmojis() {
+    if (titleBgAnimId) {
+      cancelAnimationFrame(titleBgAnimId);
+      titleBgAnimId = null;
+    }
+    titleBgObjects = [];
+    const container = $('#title-bg-emojis');
+    if (container) container.innerHTML = '';
   }
 
   // ========== localStorage ==========
@@ -83,6 +165,10 @@
     const btn = $('#btn-bgm-toggle');
     btn.textContent = on ? '🔊 BGM' : '🔇 BGM';
     btn.classList.toggle('btn-sound-off', !on);
+    // タイトル画面にいる場合はBGM再開
+    if (on && $('#screen-title').classList.contains('active')) {
+      BGM.start('easy');
+    }
   });
 
   // ========== タイトル画面: 難易度選択 ==========
@@ -619,4 +705,5 @@
   initTitle();
   updateExtraButton();
   showScreen('title');
+  createTitleBgEmojis();
 })();

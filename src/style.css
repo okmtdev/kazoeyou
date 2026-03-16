@@ -28,6 +28,9 @@ html, body {
   background: linear-gradient(135deg, #e8f0ff 0%, #fff5e8 100%);
   position: relative;
 }
+.method-back {
+  position: absolute; top: 16px; left: 16px; z-index: 10;
+}
 .title-container { text-align: center; padding: 20px; max-width: 520px; width: 100%; }
 .game-title { font-size: 2.6rem; color: #ff7043; margin-bottom: 16px; text-shadow: 2px 2px 0 #ffe0b2; }
 .setting-label { font-size: 1.2rem; color: #666; margin-bottom: 20px; }

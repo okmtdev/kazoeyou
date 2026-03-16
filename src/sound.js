@@ -49,7 +49,7 @@ const SE = (() => {
  */
 const BGM = (() => {
   let ctx = null;
-  let enabled = false;
+  let enabled = true;
   let playing = false;
   let gainNode = null;
   let sources = [];

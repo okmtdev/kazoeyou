@@ -28,7 +28,14 @@ html, body {
   background: linear-gradient(135deg, #e8f0ff 0%, #fff5e8 100%);
 }
 .title-container { text-align: center; padding: 20px; max-width: 520px; width: 100%; }
-.game-title { font-size: 2.6rem; color: #ff7043; margin-bottom: 28px; text-shadow: 2px 2px 0 #ffe0b2; }
+.game-title { font-size: 2.6rem; color: #ff7043; margin-bottom: 16px; text-shadow: 2px 2px 0 #ffe0b2; }
+.btn-sound {
+  font-size: 1.6rem; background: none; border: 2px solid #ccc; border-radius: 50%;
+  width: 48px; height: 48px; cursor: pointer; margin-bottom: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+}
+.btn-sound:active { transform: scale(0.9); }
 .setting-label { font-size: 1.2rem; color: #666; margin-bottom: 20px; }
 
 /* 難易度カード */

@@ -47,10 +47,20 @@
     return data[diff] && data[diff].includes(index);
   }
 
+  // ========== SE トグル ==========
+  $('#btn-sound-toggle').addEventListener('click', () => {
+    SE.init();
+    const on = SE.toggle();
+    $('#btn-sound-toggle').textContent = on ? '🔊' : '🔇';
+    if (on) SE.tap();
+  });
+
   // ========== タイトル画面: 難易度選択 ==========
   function initTitle() {
     $$('[data-difficulty]').forEach((btn) => {
       btn.addEventListener('click', () => {
+        SE.init();
+        SE.tap();
         difficulty = btn.dataset.difficulty;
         showMethodScreen();
       });
@@ -65,12 +75,16 @@
 
   $$('[data-method]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      SE.tap();
       method = btn.dataset.method;
       showStageSelect();
     });
   });
 
-  $('#btn-back-to-title').addEventListener('click', () => showScreen('title'));
+  $('#btn-back-to-title').addEventListener('click', () => {
+    SE.tap();
+    showScreen('title');
+  });
 
   // ========== ステージ選択画面 ==========
   function showStageSelect() {
@@ -87,6 +101,7 @@
         <div class="stage-name">${stage.stageName}</div>
       `;
       card.addEventListener('click', () => {
+        SE.tap();
         currentStageIndex = i;
         startGame();
       });
@@ -94,7 +109,10 @@
     });
   }
 
-  $('#btn-back-method').addEventListener('click', () => showMethodScreen());
+  $('#btn-back-method').addEventListener('click', () => {
+    SE.tap();
+    showMethodScreen();
+  });
 
   // ========== ゲーム画面 ==========
   function startGame() {
@@ -112,12 +130,18 @@
     $('#game-question').textContent = questions;
     $('#game-stage-num').textContent = `${currentStageIndex + 1} / 5`;
 
-    setupField(stage);
+    // 回答エリアを先にセットアップ (フィールドサイズ確定のため)
     setupAnswerArea(stage);
-    if (stage.moving) startAnimation();
+
+    // レイアウト確定後にフィールド配置
+    requestAnimationFrame(() => {
+      setupField(stage);
+      if (stage.moving) startAnimation();
+    });
   }
 
   $('#btn-back-stages').addEventListener('click', () => {
+    SE.tap();
     stopAnimation();
     showStageSelect();
   });
@@ -153,9 +177,12 @@
     el.dataset.type = type;
     el.dataset.targetIndex = targetIndex;
 
-    const margin = 40;
-    const x = margin + Math.random() * (fw - margin * 2);
-    const y = margin + Math.random() * (fh - margin * 2);
+    // 上下左右に十分なマージンを確保
+    const marginX = 30;
+    const marginTop = 20;
+    const marginBottom = 40;
+    const x = marginX + Math.random() * (fw - marginX * 2);
+    const y = marginTop + Math.random() * (fh - marginTop - marginBottom);
 
     el.style.left = x + 'px';
     el.style.top = y + 'px';
@@ -183,21 +210,22 @@
   // ========== アニメーション ==========
   function startAnimation() {
     const field = $('#game-field');
-    const fw = field.clientWidth;
-    const fh = field.clientHeight;
     const margin = 20;
+    const marginBottom = 40;
 
     function frame() {
+      const fw = field.clientWidth;
+      const fh = field.clientHeight;
       objects.forEach((obj) => {
         if (obj.vx === 0 && obj.vy === 0) return;
         obj.x += obj.vx;
         obj.y += obj.vy;
 
         if (obj.x < margin || obj.x > fw - margin) obj.vx *= -1;
-        if (obj.y < margin || obj.y > fh - margin) obj.vy *= -1;
+        if (obj.y < margin || obj.y > fh - marginBottom) obj.vy *= -1;
 
         obj.x = Math.max(margin, Math.min(fw - margin, obj.x));
-        obj.y = Math.max(margin, Math.min(fh - margin, obj.y));
+        obj.y = Math.max(margin, Math.min(fh - marginBottom, obj.y));
 
         obj.el.style.left = obj.x + 'px';
         obj.el.style.top = obj.y + 'px';
@@ -261,6 +289,7 @@
           if (digitEl.textContent !== '') {
             digitEl.textContent = '';
             digitEl.classList.remove('filled');
+            SE.tap();
           }
         });
         display.appendChild(digitEl);
@@ -285,6 +314,7 @@
             if (digit.textContent === '') {
               digit.textContent = n;
               digit.classList.add('filled');
+              SE.numPick();
               return;
             }
           }
@@ -307,6 +337,7 @@
         return numStr === '' ? -1 : parseInt(numStr, 10);
       });
       if (answers.some((a) => a < 0 || isNaN(a))) return;
+      SE.tap();
       checkAnswer(stage, answers);
     });
     submitRow.appendChild(submitBtn);
@@ -374,6 +405,7 @@
     clearBtn.textContent = 'くりあ';
     clearBtn.addEventListener('click', () => {
       if (isCheckingAnswer) return;
+      SE.tap();
       recognizers.forEach((r) => r.clear());
       groups.forEach((g) => {
         g.resultDiv.innerHTML = 'よみとりけっか: <span>?</span>';
@@ -403,6 +435,7 @@
         answers.push(numStr === '' ? -1 : parseInt(numStr, 10));
       }
       if (answers.some((a) => a < 0 || isNaN(a))) return;
+      SE.tap();
       checkAnswer(stage, answers);
     });
     controls.appendChild(submitBtn);
@@ -495,8 +528,6 @@
   function animateCount(field, targetObjs, stage, countDisplay, titleDisplay, summaryDisplay, isCorrect, answers) {
     const targetIndices = Object.keys(targetObjs).sort();
     let tIdx = 0;
-    // 各ターゲットのカウント結果を蓄積
-    const countResults = [];
 
     function countNextGroup() {
       if (tIdx >= targetIndices.length) {
@@ -519,6 +550,14 @@
 
           titleDisplay.textContent = isCorrect ? '🎉 せいかい！' : '😢 ざんねん…';
           titleDisplay.className = 'result-title ' + (isCorrect ? 'correct' : 'wrong');
+
+          // SE: 正解/不正解
+          if (isCorrect) {
+            SE.correct();
+          } else {
+            SE.wrong();
+          }
+
           showResultButtons(isCorrect);
         }, 600);
         return;
@@ -534,7 +573,7 @@
       function countNext() {
         if (count >= objs.length) {
           countDisplay.textContent = `${emoji}  : ${objs.length} こ！`;
-          countResults.push({ emoji, total: objs.length });
+          SE.groupDone();
           tIdx++;
           setTimeout(countNextGroup, 800);
           return;
@@ -554,6 +593,9 @@
         badge.style.left = (obj.x + 20) + 'px';
         badge.style.top = (obj.y - 8) + 'px';
         field.appendChild(badge);
+
+        // SE: カウント音
+        SE.count();
 
         count++;
         countDisplay.textContent = `${emoji}  : ${count}`;
@@ -587,13 +629,16 @@
   }
 
   $('#btn-next').addEventListener('click', () => {
+    SE.tap();
     currentStageIndex++;
     startGame();
   });
   $('#btn-retry').addEventListener('click', () => {
+    SE.tap();
     startGame();
   });
   $('#btn-back-result').addEventListener('click', () => {
+    SE.tap();
     showStageSelect();
   });
 
